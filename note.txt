@@ -1,0 +1,86 @@
+http://localhost:5184/swagger/index.html
+
+AspAPIMultiAuth > dotnet publish AspAPIMultiAuth.csproj -c Release -r win-x64 --self-contained false -o ./
+
+// @AspAPIMultiAuth_HostAddress = http://localhost:5184
+// request in the browser => http://localhost:5184/weather
+// response in the browser => 200 OK and json data is
+{
+  "isAuthenticated": true,
+  "message": "Welcome SSNWE\\GW-2022-10-1",
+  "authenticationType": "NTLM",
+  "forecast": [
+    {
+      "date": "2025-04-26",
+      "temperatureC": 26,
+      "summary": "Balmy",
+      "temperatureF": 78
+    },
+    {
+      "date": "2025-04-27",
+      "temperatureC": 23,
+      "summary": "Balmy",
+      "temperatureF": 73
+    },
+    {
+      "date": "2025-04-28",
+      "temperatureC": 33,
+      "summary": "Chilly",
+      "temperatureF": 91
+    },
+    {
+      "date": "2025-04-29",
+      "temperatureC": 29,
+      "summary": "Cool",
+      "temperatureF": 84
+    },
+    {
+      "date": "2025-04-30",
+      "temperatureC": -13,
+      "summary": "Scorching",
+      "temperatureF": 9
+    }
+  ]
+}
+.............................................
+iis => physical path => AspAPIMultiAuth\publish
+iis port => 5185
+porject port =>5184
+
+
+...............................Poweshell................
+PS C:\Users\GW-2022-10-1> Invoke-WebRequest -Uri http://localhost:5185/weather -UseDefaultCredentials
+PS C:\Users\GW-2022-10-1> Invoke-WebRequest -Uri http://localhost:5184/weather -UseDefaultCredentials
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"isAuthenticated":true,"message":"Welcome SSNWE\\GW-2022-10-1","authenticationType":"Negotiate","forecast":[{"date":"2025-04-26","temp
+                    eratureC":33,"summary":"Bracing","temperatureF":91},{"date":"2025...
+RawContent        : HTTP/1.1 200 OK
+                    Transfer-Encoding: chunked
+                    Persistent-Auth: true
+                    Content-Type: application/json; charset=utf-8
+                    Date: Fri, 25 Apr 2025 10:21:23 GMT
+                    Server: Microsoft-IIS/10.0
+                    WWW-Authenticate: Ne...
+Forms             : {}
+Headers           : {[Transfer-Encoding, chunked], [Persistent-Auth, true], [Content-Type, application/json; charset=utf-8], [Date, Fri, 25 Apr 2025
+                    10:21:23 GMT]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 493
+.........................
+
+
+...........................Curl...................
+PS C:\Users\GW-2022-10-1> & curl.exe --negotiate -u : http://localhost:5185/weather
+PS C:\Users\GW-2022-10-1> & curl.exe --negotiate -u : http://localhost:5184/weather
+{"isAuthenticated":true,"message":"Welcome SSNWE\\GW-2022-10-1","authenticationType":"Negotiate",
+"forecast":[{"date":"2025-04-26","temperatureC":44,"summary":"Cool","temperatureF":111
+date":"2025-04-27","temperatureC":43,"summary":"Bracing","temperatureF":109},{"date":"2025-04-28","temperatureC":18,"summary":"Hot",
+"temperatureF":64},{"date":"2025-04-29","temperatureC":-10,"summary":"Warm","temperatureF":15},{"date":"2025-04-30","temperatureC":-1,
+"summary":"Freezing","temperatureF":31}]}
+
+..............................................
