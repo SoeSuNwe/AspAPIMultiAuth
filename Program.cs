@@ -1,11 +1,32 @@
-using Microsoft.AspNetCore.Authentication.Negotiate;
+using AspAPIMultiAuth.dto;
+using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Enable Windows Authentication (Negotiate)
-builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-    .AddNegotiate();
+// Bind JwtSettings
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.Authority = jwtSettings.Authority;
+    options.RequireHttpsMetadata = jwtSettings.RequireHttpsMetadata;
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings.ValidIssuer,
+        ValidateAudience = true,
+        ValidAudiences = jwtSettings.ValidAudiences,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true
+    };
+})
+    .AddNegotiate(); // Enable Windows Authentication (Negotiate)
 
 builder.Services.AddAuthorization();
 
@@ -46,5 +67,5 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();  
+app.MapControllers();
 app.Run();

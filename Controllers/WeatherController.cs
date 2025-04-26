@@ -1,9 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AspAPIMultiAuth.dto; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AspAPIMultiAuth.Controllers {
     [ApiController]
     [Route("[controller]")]
+
+    [Authorize(AuthenticationSchemes =
+    JwtBearerDefaults.AuthenticationScheme + "," +
+    NegotiateDefaults.AuthenticationScheme)]
+
     public class WeatherController : ControllerBase {
         private static readonly string[] Summaries = new[]
         {
@@ -33,13 +41,5 @@ namespace AspAPIMultiAuth.Controllers {
                 Forecast = forecast,
             });
         }
-    }
-
-    public class WeatherForecast {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
     }
 }
