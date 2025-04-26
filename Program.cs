@@ -19,25 +19,32 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 });
-
-// Read Kestrel configuration from appsettings.json
-builder.WebHost.ConfigureKestrel((context, options) =>
+builder.Services.AddCors(options =>
 {
-    options.Configure(context.Configuration.GetSection("Kestrel"));
+    options.AddDefaultPolicy(policy =>
+    {
+        // Allow CORS from both HTTP and HTTPS for localhost
+        policy.WithOrigins("http://localhost:5184", "https://localhost:7184") // Add both HTTP and HTTPS
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("https://localhost:7184/swagger/v1/swagger.json", "Windows Auth API v1");
+        c.RoutePrefix = string.Empty;
+    });
 }
-
+app.UseCors();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
-
+app.MapControllers();  
 app.Run();

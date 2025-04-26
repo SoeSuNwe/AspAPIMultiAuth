@@ -7,10 +7,10 @@
     "AspAPIMultiAuth": {
       "commandName": "Project",
       "launchBrowser": true,
+      "applicationUrl": "https://localhost:7184;http://localhost:5184",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "DEVELOPMENT"
       },
-      "applicationUrl": "http://localhost:5184",
       "windowsAuthentication": true,
       "anonymousAuthentication": false
     }
