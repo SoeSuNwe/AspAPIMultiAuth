@@ -53,11 +53,23 @@ By default, the API will be available at:
 
 3. **Explore Swagger UI**
 
-Navigate to:
+Navigate to Swagger:
 ```
 https://localhost:7184/swagger
 ```
 You will see versioned endpoints (`v1`, etc.).
+
+```
+https://localhost:7184/swagger/index.html?urls.primaryName=V1
+```
+
+Navigate to OpenAPI:
+```
+https://localhost:7184/swagger/v1/swagger.json
+```
+```
+https://localhost:7184/swagger/v2/swagger.json
+```
 
 ## Authentication Flow
 
