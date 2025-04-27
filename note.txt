@@ -49,8 +49,8 @@ porject port =>5184
 
 
 ...............................Poweshell................
-PS C:\Users\GW-2022-10-1> Invoke-WebRequest -Uri http://localhost:5185/weather -UseDefaultCredentials
-PS C:\Users\GW-2022-10-1> Invoke-WebRequest -Uri http://localhost:5184/weather -UseDefaultCredentials
+PS C:\Users\GW-2022-10-1> Invoke-WebRequest -Uri http://localhost:5185/weather -UseDefaultCredentials (IIS hosting)
+PS C:\Users\GW-2022-10-1> Invoke-WebRequest -Uri https://localhost:7184/weather -UseDefaultCredentials
 
 StatusCode        : 200
 StatusDescription : OK
@@ -75,7 +75,7 @@ RawContentLength  : 493
 
 
 ...........................Curl...................
-PS C:\Users\GW-2022-10-1> & curl.exe --negotiate -u : http://localhost:5185/weather
+PS C:\Users\GW-2022-10-1> & curl.exe --negotiate -u : http://localhost:5185/weather (IIS hosting)
 PS C:\Users\GW-2022-10-1> & curl.exe --negotiate -u : http://localhost:5184/weather
 {"isAuthenticated":true,"message":"Welcome SSNWE\\GW-2022-10-1","authenticationType":"Negotiate",
 "forecast":[{"date":"2025-04-26","temperatureC":44,"summary":"Cool","temperatureF":111
@@ -84,3 +84,14 @@ date":"2025-04-27","temperatureC":43,"summary":"Bracing","temperatureF":109},{"d
 "summary":"Freezing","temperatureF":31}]}
 
 ..............................................
+
+........................Swagger UI........................
+default ui =>  https://localhost:7184/index.html
+view by version => https://localhost:7184/swagger/index.html
+https://localhost:7184/swagger/index.html?urls.primaryName=V1
+https://localhost:7184/swagger/index.html?urls.primaryName=V2
+
+json file by version
+=> https://localhost:7184/swagger/v1/swagger.json
+=> https://localhost:7184/swagger/v2/swagger.json
+...........................................................

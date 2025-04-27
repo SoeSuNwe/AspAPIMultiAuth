@@ -1,26 +1,26 @@
+﻿using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using AspAPIMultiAuth.dto;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 
-namespace AspAPIMultiAuth {
-    public class Program {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-            // Bind JwtSettings
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+// Add controllers
+builder.Services.AddControllers();
 
-            builder.Services.AddAuthentication("CompositeScheme")
+// JWT Settings
+builder.Services.AddOptions<JwtSettings>()
+    .Bind(builder.Configuration.GetSection("JwtSettings"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.AddAuthentication("CompositeScheme")
                 .AddPolicyScheme("CompositeScheme", "Multi-Auth", options =>
                 {
                     options.ForwardDefaultSelector = context =>
                     {
-                        var headers = context.Request.Headers;
-
-                        if (headers.ContainsKey("X-API-Key")) return "ApiKeyScheme";
+                        var headers = context.Request.Headers; 
                         if (headers.TryGetValue("Authorization", out var authHeader))
                         {
                             if (authHeader.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
@@ -28,10 +28,6 @@ namespace AspAPIMultiAuth {
                             if (authHeader.ToString().StartsWith("Negotiate", StringComparison.OrdinalIgnoreCase))
                                 return "WindowsScheme";
                         }
-
-                        if (context.Connection.ClientCertificate != null)
-                            return "ClientCertScheme";
-
                         return "WindowsScheme";
                     };
                 })
@@ -49,62 +45,58 @@ namespace AspAPIMultiAuth {
                         ValidateIssuerSigningKey = true
                     };
                 })
-                .AddNegotiate();
+                .AddNegotiate("WindowsScheme", options => { });
 
-            builder.Services.AddAuthorization();
+builder.Services.AddAuthorization();
 
-            builder.Services.AddControllers();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "Windows Auth API",
-                    Version = "v1"
-                });
-            });
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("x-api-version")
+    );
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(policy =>
-                {
-                    policy.WithOrigins("http://localhost:5184", "https://localhost:7184") // Add both HTTP and HTTPS
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
-            });
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        // Allow CORS from both HTTP and HTTPS for localhost
+        policy.WithOrigins("http://localhost:5184", "https://localhost:7184") // Add both HTTP and HTTPS
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+var app = builder.Build();
 
-            builder.Services.AddApiVersioning(options =>
-            {
-                options.AssumeDefaultVersionWhenUnspecified = true;
-                options.DefaultApiVersion = new ApiVersion(1, 0);
-                options.ReportApiVersions = true;
-                options.ApiVersionReader = ApiVersionReader.Combine(
-                    new QueryStringApiVersionReader("api-version"),
-                    new UrlSegmentApiVersionReader()
-                );
-            });
+app.UseHttpsRedirection();
 
-            var app = builder.Build();
+app.UseSwagger();
+var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("https://localhost:7184/swagger/v1/swagger.json", "Windows Auth API v1");
-                    c.RoutePrefix = string.Empty;
-                });
-            }
-
-            app.UseCors();
-            app.UseHttpsRedirection();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.MapControllers();
-            app.Run();
-        }
+app.UseSwaggerUI(options =>
+{
+    foreach (var description in provider.ApiVersionDescriptions)
+    {
+        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
+                                description.GroupName.ToUpperInvariant());
     }
-}
+});
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
